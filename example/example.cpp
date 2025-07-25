@@ -34,7 +34,7 @@
 #include "../process.hpp"
 
 #if (defined(_WIN32) && defined(_MSC_VER))
-#pragma comment(linker, "/subsystem:windows /ENTRY:mainCRTStartup")
+#pragma comment(linker, "/subsystem:console /ENTRY:mainCRTStartup")
 #endif
 
 int main(int argc, char **argv) {

@@ -23,9 +23,9 @@ elif [ $(uname) = "SunOS" ]; then
     export SOLARIS=1;
   fi
   if [ $SOLARIS = 0 ]; then 
-    CC example.cpp ../process.cpp -o ../xproc -std=c++17 -DNULLIFY_STDERR -D__illumos__ -Wall -lkvm -lproc; ../xproc;
+    c++ example.cpp ../process.cpp -o ../xproc -std=c++17 -DNULLIFY_STDERR -D__illumos__ -Wall -lkvm -lproc; ../xproc;
   else
-    CC example.cpp ../process.cpp -o ../xproc -std=c++17 -DNULLIFY_STDERR -Wall -lkvm -lproc; ../xproc;
+    c++ example.cpp ../process.cpp -o ../xproc -std=c++17 -DNULLIFY_STDERR -Wall -lkvm -lproc; ../xproc;
   fi
 else
   g++ example.cpp ../process.cpp -o ../xproc.exe -std=c++17 -DNULLIFY_STDERR -Wall -static-libgcc -static-libstdc++ -static -lntdll -Wl,--subsystem,console; ../xproc.exe;

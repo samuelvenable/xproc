@@ -26,6 +26,8 @@
 */
 
 #if (defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__sun))
+// __illumos__ macro is not defined by the OS and 
+// should be added manually by your build system:
 #if (defined(__sun) && defined(__illumos__))
 #include <cstdint>
 #if (INTPTR_MAX == INT32_MAX)

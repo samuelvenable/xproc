@@ -1773,7 +1773,7 @@ namespace ngs::ps {
 
     void output_thread(std::intptr_t file, NGS_PROCID proc_index) {
       #if !(defined(_WIN32) || defined(_WIN64))
-      sstd::size_t nRead = 0; char buffer[BUFSIZ];
+      ssize_t nRead = 0; char buffer[BUFSIZ];
       while ((nRead = read((int)file, buffer, BUFSIZ)) > 0) {
         buffer[nRead] = '\0';
       #else
@@ -1953,7 +1953,7 @@ namespace ngs::ps {
     std::vector<char> v(s.length());
     std::copy(s.c_str(), s.c_str() + s.length(), v.begin());
     #if !(defined(_WIN32) || defined(_WIN64))
-    sstd::size_t nwritten = -1;
+    ssize_t nwritten = -1;
     lseek((int)stdipt_map[proc_id], 0, SEEK_END);
     nwritten = write((int)stdipt_map[proc_id], &v[0], v.size());
     return nwritten;
@@ -2027,7 +2027,7 @@ namespace ngs::ps {
       return standard_input;
     }
     std::vector<char> buff;
-    sstd::size_t nread = BUFSIZ;
+    ssize_t nread = BUFSIZ;
     buff.resize(nread);
     while ((nread = read(fileno(stdin), &buff[0], nread)) > 0) {
       standard_input.append(buff.data(), nread);

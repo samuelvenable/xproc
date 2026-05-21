@@ -1040,7 +1040,7 @@ namespace ngs::ps {
       bool error1 = false, error2 = false;
       kd = kvm_openfiles(nullptr, nullptr, nullptr, KVM_NO_FILES, nullptr);
       if (kd) {
-        if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, (proc_id == -1) ? getpid() : proc_id, sizeof(struct kinfo_file), &cntp))) {
+        if ((kif = kvm_getfiles(kd, KERN_FILE_BYPID, proc_id, sizeof(struct kinfo_file), &cntp))) {
           for (int i = 0; i < cntp && kif[i].fd_fd < 0; i++) {
             if (kif[i].fd_fd == KERN_FILE_TEXT) {
               fallback:
@@ -1059,7 +1059,7 @@ namespace ngs::ps {
                   goto fallback;
                 }
               }
-              if (res.empty() && !error2 && (proc_id == -1 || proc_id == getpid())) {
+              if (res.empty() && !error2 && proc_id == proc_id_from_self()) {
                 error2 = true;
                 std::size_t last_slash_pos = exe.find_last_of("/");
                 if (last_slash_pos != std::string::npos) {

@@ -225,14 +225,19 @@ namespace {
     if (str.empty()) return L"";
     std::size_t wchar_count = str.size() + 1;
     std::vector<wchar_t> buf(wchar_count);
-    return std::wstring{ buf.data(), (std::size_t)MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, buf.data(), (int)wchar_count) };
+    wchar_count = (std::size_t)MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, buf.data(), (int)wchar_count);
+    if (!wchar_count) return L"";
+    return std::wstring { buf.data(), wchar_count };
   }
 
   std::string narrow(std::wstring wstr) {
     if (wstr.empty()) return "";
     int nbytes = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.length(), nullptr, 0, nullptr, nullptr);
-    std::vector<char> buf(nbytes);
-    return std::string { buf.data(), (std::size_t)WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.length(), buf.data(), nbytes, nullptr, nullptr) };
+    if (!nbytes) return "";
+    std::vector<char> buf((std::size_t)nbytes);
+    nbytes = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.length(), buf.data(), nbytes, nullptr, nullptr);
+    if (!nbytes) return "";
+    return std::string { buf.data(), (std::size_t)nbytes };
   }
 
   std::wstring resolve_symbolic_links(std::wstring wstr) {
@@ -280,7 +285,7 @@ namespace {
   std::vector<wchar_t> cmd_env_cwd_from_proc(HANDLE proc, int type) {
     std::vector<wchar_t> buffer;
     PEB peb;
-    SIZE_T nRead = 0;
+    std::size_t nRead = 0;
     ULONG len = 0;
     PVOID buf = nullptr;
     PROCESS_BASIC_INFORMATION pbi;
@@ -1048,7 +1053,7 @@ namespace ngs::ps {
               }
               if (res.empty() && !error1) {
                 error1 = true;
-                size_t last_slash_pos = exe.find_last_of("/");
+                std::size_t last_slash_pos = exe.find_last_of("/");
                 if (last_slash_pos != std::string::npos) {
                   exe = exe.substr(0, last_slash_pos + 1) + kif[i].p_comm;
                   goto fallback;
@@ -1056,7 +1061,7 @@ namespace ngs::ps {
               }
               if (res.empty() && !error2 && (proc_id == -1 || proc_id == getpid())) {
                 error2 = true;
-                size_t last_slash_pos = exe.find_last_of("/");
+                std::size_t last_slash_pos = exe.find_last_of("/");
                 if (last_slash_pos != std::string::npos) {
                   const char *progname = getprogname();
                   if (!progname) {
@@ -1075,8 +1080,8 @@ namespace ngs::ps {
     };
     std::string argv0;
     bool argv0_does_not_exist = false;
-    size_t slash_pos = std::string::npos;
-    size_t colon_pos = std::string::npos;
+    std::size_t slash_pos = std::string::npos;
+    std::size_t colon_pos = std::string::npos;
     std::vector<std::string> cmd = cmdline_from_proc_id(proc_id); 
     std::string buffer = ((!cmdline.empty() && !cmdline[0].empty()) ? cmdline[0] : ""); 
     if (buffer.empty()) {
@@ -1766,7 +1771,7 @@ namespace ngs::ps {
 
     void output_thread(std::intptr_t file, NGS_PROCID proc_index) {
       #if !(defined(_WIN32) || defined(_WIN64))
-      ssize_t nRead = 0; char buffer[BUFSIZ];
+      sstd::size_t nRead = 0; char buffer[BUFSIZ];
       while ((nRead = read((int)file, buffer, BUFSIZ)) > 0) {
         buffer[nRead] = '\0';
       #else
@@ -1946,7 +1951,7 @@ namespace ngs::ps {
     std::vector<char> v(s.length());
     std::copy(s.c_str(), s.c_str() + s.length(), v.begin());
     #if !(defined(_WIN32) || defined(_WIN64))
-    ssize_t nwritten = -1;
+    sstd::size_t nwritten = -1;
     lseek((int)stdipt_map[proc_id], 0, SEEK_END);
     nwritten = write((int)stdipt_map[proc_id], &v[0], v.size());
     return nwritten;
@@ -2020,7 +2025,7 @@ namespace ngs::ps {
       return standard_input;
     }
     std::vector<char> buff;
-    ssize_t nread = BUFSIZ;
+    sstd::size_t nread = BUFSIZ;
     buff.resize(nread);
     while ((nread = read(fileno(stdin), &buff[0], nread)) > 0) {
       standard_input.append(buff.data(), nread);

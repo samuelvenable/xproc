@@ -25,7 +25,7 @@
 
 */
 
-#if (defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || (defined(__sun) && defined(__SVR4)))
+#if ((defined(_WIN32) || defined(_WIN64)) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || (defined(__sun) && defined(__SVR4)))
 // __illumos__ macro is not defined by the OS and 
 // should be added manually by your build system:
 #if ((defined(__sun) && defined(__SVR4)) && defined(__illumos__))
@@ -41,7 +41,7 @@
 #else
 #error "Unsupported Platform! Supported Platforms: Windows, macOS, Linux, FreeBSD, DragonFly BSD, NetBSD, OpenBSD, Solaris, illumos (64-bit-only), and Android."
 #endif
-#if (defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || (defined(__sun) && defined(__SVR4)))
+#if ((defined(_WIN32) || defined(_WIN64)) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || (defined(__sun) && defined(__SVR4)))
 
 #include <unordered_map>
 #include <algorithm>
@@ -58,7 +58,7 @@
 
 #include "process.hpp"
 
-#if !defined(_WIN32)
+#if !(defined(_WIN32) || defined(_WIN64))
 #include <signal.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -66,7 +66,7 @@
 #include <fcntl.h>
 #endif
 
-#if defined(_WIN32)
+#if (defined(_WIN32) || defined(_WIN64))
 #include <shlwapi.h>
 #include <objbase.h>
 #include <tlhelp32.h>
@@ -107,7 +107,7 @@
 #if defined(USE_SDL3_POLLEVENT)
 #include <SDL3/SDL.h>
 #endif
-#if (defined(_WIN32) && defined(_MSC_VER))
+#if ((defined(_WIN32) || defined(_WIN64)) && defined(_MSC_VER))
 #pragma comment(lib, "ntdll.lib")
 #if (defined(USE_SDL_POLLEVENT) || defined(USE_SDL2_POLLEVENT))
 #pragma comment(lib, "SDL2.lib")
@@ -120,7 +120,7 @@
 namespace {
 
   void message_pump() {
-    #if defined(_WIN32)
+    #if (defined(_WIN32) || defined(_WIN64))
     MSG msg;
     while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
       TranslateMessage(&msg);
@@ -139,7 +139,7 @@ namespace {
     return vec;
   }
 
-  #if defined(_WIN32)
+  #if (defined(_WIN32) || defined(_WIN64))
   enum MEMTYP {
     MEMCMD,
     MEMENV,
@@ -450,7 +450,7 @@ namespace {
 namespace ngs::ps {
 
   NGS_PROCID proc_id_from_self() {
-    #if !defined(_WIN32)
+    #if !(defined(_WIN32) || defined(_WIN64))
     return getpid();
     #else
     return GetCurrentProcessId();
@@ -459,7 +459,7 @@ namespace ngs::ps {
 
   std::vector<NGS_PROCID> proc_id_enum() {
     std::vector<NGS_PROCID> vec;
-    #if defined(_WIN32)
+    #if (defined(_WIN32) || defined(_WIN64))
     HANDLE hp = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (!hp) return vec;
     PROCESSENTRY32 pe;
@@ -585,7 +585,7 @@ namespace ngs::ps {
 
   bool proc_id_suspend(NGS_PROCID proc_id) {
     if (proc_id < 0) return false;
-    #if !defined(_WIN32)
+    #if !(defined(_WIN32) || defined(_WIN64))
     return (!kill(proc_id, SIGSTOP));
     #else
     HANDLE proc = open_process_with_debug_privilege(proc_id);
@@ -605,7 +605,7 @@ namespace ngs::ps {
 
   bool proc_id_resume(NGS_PROCID proc_id) {
     if (proc_id < 0) return false;
-    #if !defined(_WIN32)
+    #if !(defined(_WIN32) || defined(_WIN64))
     return (!kill(proc_id, SIGCONT));
     #else
     HANDLE proc = open_process_with_debug_privilege(proc_id);
@@ -625,7 +625,7 @@ namespace ngs::ps {
 
   bool proc_id_kill(NGS_PROCID proc_id) {
     if (proc_id < 0) return false;
-    #if !defined(_WIN32)
+    #if !(defined(_WIN32) || defined(_WIN64))
     return (!kill(proc_id, SIGKILL));
     #else
     HANDLE proc = open_process_with_debug_privilege(proc_id);
@@ -639,7 +639,7 @@ namespace ngs::ps {
   std::vector<NGS_PROCID> parent_proc_id_from_proc_id(NGS_PROCID proc_id) {
     std::vector<NGS_PROCID> vec;
     if (proc_id < 0) return vec;
-    #if defined(_WIN32)
+    #if (defined(_WIN32) || defined(_WIN64))
     HANDLE hp = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (!hp) return vec;
     PROCESSENTRY32 pe;
@@ -762,7 +762,7 @@ namespace ngs::ps {
   std::vector<NGS_PROCID> proc_id_from_parent_proc_id(NGS_PROCID parent_proc_id) {
     std::vector<NGS_PROCID> vec;
     if (parent_proc_id < 0) return vec;
-    #if defined(_WIN32)
+    #if (defined(_WIN32) || defined(_WIN64))
     HANDLE hp = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (!hp) return vec;
     PROCESSENTRY32 pe;
@@ -891,7 +891,7 @@ namespace ngs::ps {
     std::vector<NGS_PROCID> vec;
     if (exe.empty()) return vec;
     auto fnamecmp = [](std::string fname1, std::string fname2) {
-      #if defined(_WIN32)
+      #if (defined(_WIN32) || defined(_WIN64))
       std::transform(fname1.begin(), fname1.end(), fname1.begin(), ::toupper);
       std::transform(fname2.begin(), fname2.end(), fname2.begin(), ::toupper);
       std::size_t fp = fname2.find_last_of("\\/");
@@ -902,7 +902,7 @@ namespace ngs::ps {
       bool abspath = (!fname1.empty() && fname1.length() >= 1 && fname1[0] == '/');
       #endif
       if (fname1.empty() || fname2.empty() || fp == std::string::npos) return false;
-      #if defined(_WIN32)
+      #if (defined(_WIN32) || defined(_WIN64))
       if (abspath && fname1.length() == 3) return (fname1 == fname2.substr(0, fp + 1));
       #else
       if (abspath && fname1.length() == 1) return (fname1 == fname2.substr(0, fp + 1));
@@ -923,7 +923,7 @@ namespace ngs::ps {
     std::vector<NGS_PROCID> vec;
     if (cwd.empty()) return vec;
     auto fnamecmp = [](std::string fname1, std::string fname2) {
-      #if defined(_WIN32)
+      #if (defined(_WIN32) || defined(_WIN64))
       std::transform(fname1.begin(), fname1.end(), fname1.begin(), ::toupper);
       std::transform(fname2.begin(), fname2.end(), fname2.begin(), ::toupper);
       #endif
@@ -942,7 +942,7 @@ namespace ngs::ps {
   std::string exe_from_proc_id(NGS_PROCID proc_id) {
     std::string path;
     if (proc_id < 0) return path;
-    #if defined(_WIN32)
+    #if (defined(_WIN32) || defined(_WIN64))
     if (proc_id == proc_id_from_self()) {
       wchar_t buffer[MAX_PATH];
       if (GetModuleFileNameW(nullptr, buffer, sizeof(buffer))) {
@@ -1171,7 +1171,7 @@ namespace ngs::ps {
   std::string cwd_from_proc_id(NGS_PROCID proc_id) {
     std::string path;
     if (proc_id < 0) return path;
-    #if defined(_WIN32)
+    #if (defined(_WIN32) || defined(_WIN64))
     if (proc_id == proc_id_from_self()) {
       wchar_t buffer[MAX_PATH];
       if (GetCurrentDirectoryW(MAX_PATH, buffer)) {
@@ -1377,7 +1377,7 @@ namespace ngs::ps {
   std::string comm_from_proc_id(NGS_PROCID proc_id) {
     std::string exe = exe_from_proc_id(proc_id);
     if (exe.empty()) return "";
-    #if !defined(_WIN32)
+    #if !(defined(_WIN32) || defined(_WIN64))
     std::size_t pos = exe.find_last_of("/");
     #else
     std::size_t pos = exe.find_last_of("\\/");
@@ -1391,7 +1391,7 @@ namespace ngs::ps {
   std::vector<std::string> cmdline_from_proc_id(NGS_PROCID proc_id) {
     std::vector<std::string> vec;
     if (proc_id < 0) return vec;
-    #if defined(_WIN32)
+    #if (defined(_WIN32) || defined(_WIN64))
     HANDLE proc = open_process_with_debug_privilege(proc_id);
     if (!proc) return vec;
     int cmdsize = 0;
@@ -1507,7 +1507,7 @@ namespace ngs::ps {
   std::vector<std::string> environ_from_proc_id(NGS_PROCID proc_id) {
     std::vector<std::string> vec;
     if (proc_id < 0) return vec;
-    #if defined(_WIN32)
+    #if (defined(_WIN32) || defined(_WIN64))
     HANDLE proc = open_process_with_debug_privilege(proc_id);
     if (!proc) return vec;
     std::vector<wchar_t> buffer = cmd_env_cwd_from_proc(proc, MEMENV);
@@ -1630,7 +1630,7 @@ namespace ngs::ps {
         message_pump();
         std::vector<std::string> equalssplit = string_split_by_first_equals_sign(vec[i]);
         if (equalssplit.size() == 2) {
-          #if defined(_WIN32)
+          #if (defined(_WIN32) || defined(_WIN64))
           std::transform(equalssplit[0].begin(), equalssplit[0].end(), equalssplit[0].begin(), ::toupper);
           std::transform(name.begin(), name.end(), name.begin(), ::toupper);
           #endif
@@ -1653,7 +1653,7 @@ namespace ngs::ps {
         message_pump();
         std::vector<std::string> equalssplit = string_split_by_first_equals_sign(vec[i]);
         if (!equalssplit.empty()) {
-          #if defined(_WIN32)
+          #if (defined(_WIN32) || defined(_WIN64))
           std::transform(equalssplit[0].begin(), equalssplit[0].end(), equalssplit[0].begin(), ::toupper);
           std::transform(name.begin(), name.end(), name.begin(), ::toupper);
           #endif
@@ -1679,7 +1679,7 @@ namespace ngs::ps {
     long long optlmt = 0;
     int index = -1;
 
-    #if !defined(_WIN32)
+    #if !(defined(_WIN32) || defined(_WIN64))
     NGS_PROCID process_execute_helper(const char *command, int *infp, int *outfp) {
       int p_stdin[2];
       int p_stdout[2];
@@ -1735,7 +1735,7 @@ namespace ngs::ps {
     #endif
 
     void output_thread(std::intptr_t file, NGS_PROCID proc_index) {
-      #if !defined(_WIN32)
+      #if !(defined(_WIN32) || defined(_WIN64))
       ssize_t nRead = 0; char buffer[BUFSIZ];
       while ((nRead = read((int)file, buffer, BUFSIZ)) > 0) {
         buffer[nRead] = '\0';
@@ -1754,7 +1754,7 @@ namespace ngs::ps {
       }
     }
 
-    #if !defined(_WIN32)
+    #if !(defined(_WIN32) || defined(_WIN64))
     NGS_PROCID proc_id_from_fork_proc_id(NGS_PROCID proc_id) {
       std::this_thread::sleep_for(std::chrono::milliseconds(5));
       std::vector<NGS_PROCID> ppid = proc_id_from_parent_proc_id(proc_id);
@@ -1765,7 +1765,7 @@ namespace ngs::ps {
 
     NGS_PROCID spawn_child_proc_id_helper(std::string command) {
       index++;
-      #if !defined(_WIN32)
+      #if !(defined(_WIN32) || defined(_WIN64))
       int infd = 0, outfd = 0;
       NGS_PROCID proc_id = 0, fork_proc_id = 0, wait_proc_id = 0;
       fork_proc_id = process_execute_helper(command.c_str(), &infd, &outfd);
@@ -1915,7 +1915,7 @@ namespace ngs::ps {
     std::string s = input;
     std::vector<char> v(s.length());
     std::copy(s.c_str(), s.c_str() + s.length(), v.begin());
-    #if !defined(_WIN32)
+    #if !(defined(_WIN32) || defined(_WIN64))
     ssize_t nwritten = -1;
     lseek((int)stdipt_map[proc_id], 0, SEEK_END);
     nwritten = write((int)stdipt_map[proc_id], &v[0], v.size());
@@ -1936,7 +1936,7 @@ namespace ngs::ps {
 
   std::string read_from_stdin_for_self() {
     std::string standard_input;
-    #if defined(_WIN32)
+    #if (defined(_WIN32) || defined(_WIN64))
     if (_isatty(_fileno(stdin))) {
       return standard_input;
     }

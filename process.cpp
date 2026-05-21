@@ -25,7 +25,7 @@
 
 */
 
-#if ((defined(_WIN32) || defined(_WIN64)) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || (defined(__sun) && defined(__SVR4)))
+#if ((defined(_WIN32) || defined(_WIN64)) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || (defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || (defined(__sun) && defined(__SVR4)))
 // __illumos__ macro is not defined by the OS and 
 // should be added manually by your build system:
 #if ((defined(__sun) && defined(__SVR4)) && defined(__illumos__))
@@ -41,7 +41,7 @@
 #else
 #error "Unsupported Platform! Supported Platforms: Windows, macOS, Linux, FreeBSD, DragonFly BSD, NetBSD, OpenBSD, Solaris, illumos (64-bit-only), and Android."
 #endif
-#if ((defined(_WIN32) || defined(_WIN64)) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || (defined(__sun) && defined(__SVR4)))
+#if ((defined(_WIN32) || defined(_WIN64)) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || (defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || (defined(__sun) && defined(__SVR4)))
 
 #include <unordered_map>
 #include <algorithm>
@@ -80,7 +80,7 @@
 #include <libproc.h>
 #elif (defined(__linux__) || defined(__ANDROID__))
 #include <dirent.h>
-#elif (defined(__FreeBSD__) || defined(__DragonFly__) || defined(__OpenBSD__))
+#elif ((defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) || defined(__DragonFly__) || defined(__OpenBSD__))
 #include <sys/param.h>
 #include <sys/sysctl.h>
 #include <sys/user.h>
@@ -493,7 +493,7 @@ namespace ngs::ps {
       vec.push_back(tgid);
     }
     closedir(proc);
-    #elif defined(__FreeBSD__)
+    #elif (defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
     int cntp = 0;
     kvm_t *kd = nullptr;
     kinfo_proc *proc_info = nullptr;
@@ -681,7 +681,7 @@ namespace ngs::ps {
     }
     if (vec.empty() && proc_id == 0)
       vec.push_back(0);
-    #elif defined(__FreeBSD__)
+    #elif (defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
     int cntp = 0;
     kvm_t *kd = nullptr;
     kinfo_proc *proc_info = nullptr;
@@ -795,7 +795,7 @@ namespace ngs::ps {
         vec.push_back(proc_id[i]);
       }
     }
-    #elif defined(__FreeBSD__)
+    #elif (defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
     int cntp = 0;
     kvm_t *kd = nullptr;
     kinfo_proc *proc_info = nullptr;
@@ -991,7 +991,7 @@ namespace ngs::ps {
         path = exe;
       }
     }
-    #elif (defined(__FreeBSD__) || defined(__DragonFly__))
+    #elif ((defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) || defined(__DragonFly__))
     int mib[4];
     std::size_t len = 0;
     mib[0] = CTL_KERN;
@@ -1225,7 +1225,7 @@ namespace ngs::ps {
         path = cwd;
       }
     }
-    #elif defined(__FreeBSD__)
+    #elif (defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
     if (proc_id == proc_id_from_self()) {
       char buffer[PATH_MAX];
       if (getcwd(buffer, PATH_MAX)) {
@@ -1427,7 +1427,7 @@ namespace ngs::ps {
       if (cmd) free(cmd);
       fclose(file);
     }
-    #elif (defined(__FreeBSD__) || defined(__DragonFly__))
+    #elif ((defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) || defined(__DragonFly__))
     int cntp = 0;
     kvm_t *kd = nullptr;
     kinfo_proc *proc_info = nullptr;
@@ -1538,7 +1538,7 @@ namespace ngs::ps {
       if (env) free(env);
       fclose(file);
     }
-    #elif (defined(__FreeBSD__) || defined(__DragonFly__))
+    #elif ((defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) || defined(__DragonFly__))
     int cntp = 0;
     kvm_t *kd = nullptr;
     kinfo_proc *proc_info = nullptr;

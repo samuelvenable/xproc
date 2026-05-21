@@ -25,10 +25,10 @@
 
 */
 
-#if (defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__sun))
+#if (defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || (defined(__sun) && defined(__SVR4)))
 // __illumos__ macro is not defined by the OS and 
 // should be added manually by your build system:
-#if (defined(__sun) && defined(__illumos__))
+#if ((defined(__sun) && defined(__SVR4)) && defined(__illumos__))
 #include <cstdint>
 #if (INTPTR_MAX == INT32_MAX)
 #error "Unsupported Platform! Supported Platforms: Windows, macOS, Linux, FreeBSD, DragonFly BSD, NetBSD, OpenBSD, Solaris, illumos (64-bit-only), and Android."
@@ -41,7 +41,7 @@
 #else
 #error "Unsupported Platform! Supported Platforms: Windows, macOS, Linux, FreeBSD, DragonFly BSD, NetBSD, OpenBSD, Solaris, illumos (64-bit-only), and Android."
 #endif
-#if (defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__sun))
+#if (defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || (defined(__sun) && defined(__SVR4)))
 
 #include <unordered_map>
 #include <algorithm>
@@ -89,7 +89,7 @@
 #include <sys/param.h>
 #include <sys/sysctl.h>
 #include <kvm.h>
-#elif defined(__sun)
+#elif (defined(__sun) && defined(__SVR4))
 #include <cerrno>
 #include <kvm.h>
 #include <dirent.h>
@@ -369,7 +369,7 @@ namespace {
     free(procargs);
     return vec;
   }
-  #elif defined(__sun)
+  #elif (defined(__sun) && defined(__SVR4))
   enum MEMTYP {
     MEMCMD,
     MEMENV
@@ -480,7 +480,7 @@ namespace ngs::ps {
       if (proc_info[i] <= 0) continue;
       vec.push_back(proc_info[i]);
     }
-    #elif (defined(__linux__) || defined(__ANDROID__) || defined(__sun))
+    #elif (defined(__linux__) || defined(__ANDROID__) || (defined(__sun) && defined(__SVR4)))
     vec.push_back(0);
     DIR *proc = opendir("/proc");
     struct dirent *ent = nullptr;
@@ -549,7 +549,7 @@ namespace ngs::ps {
     }
     kvm_close(kd);
     #endif
-    #if defined(__sun)
+    #if (defined(__sun) && defined(__SVR4))
     struct pid cur_pid;
     kvm_t *kd = nullptr;
     struct proc *proc_info = nullptr;
@@ -732,7 +732,7 @@ namespace ngs::ps {
     if (vec.empty() && proc_id == 0)
       vec.push_back(0);
     #endif
-    #if defined(__sun)
+    #if (defined(__sun) && defined(__SVR4))
     pstatus_t status;
     char buffer[BUFSIZ];
     sprintf(buffer, "/proc/%d/status", proc_id);
@@ -787,7 +787,7 @@ namespace ngs::ps {
       }
       vec.push_back(proc_info[i]);
     }
-    #elif (defined(__linux__) || defined(__ANDROID__) || defined(__sun))
+    #elif (defined(__linux__) || defined(__ANDROID__) || (defined(__sun) && defined(__SVR4)))
     std::vector<NGS_PROCID> proc_id = proc_id_enum();
     for (std::size_t i = 0; i < proc_id.size(); i++) {
       std::vector<NGS_PROCID> ppid = parent_proc_id_from_proc_id(proc_id[i]);
@@ -862,7 +862,7 @@ namespace ngs::ps {
     }
     kvm_close(kd);
     #endif
-    #if defined(__sun)
+    #if (defined(__sun) && defined(__SVR4))
     struct pid cur_pid;
     kvm_t *kd = nullptr;
     struct proc *proc_info = nullptr;
@@ -1125,7 +1125,7 @@ namespace ngs::ps {
         }
       }
     }
-    #elif defined(__sun)
+    #elif (defined(__sun) && defined(__SVR4))
     if (proc_id == proc_id_from_self()) {
       const char *execname = getexecname();
       if (execname) {
@@ -1331,7 +1331,7 @@ namespace ngs::ps {
         }
       }
     }
-    #elif defined(__sun)
+    #elif (defined(__sun) && defined(__SVR4))
     if (proc_id == proc_id_from_self()) {
       char buffer[PATH_MAX];
       if (getcwd(buffer, PATH_MAX)) {
@@ -1409,7 +1409,7 @@ namespace ngs::ps {
     CloseHandle(proc);
     #elif (defined(__APPLE__) && defined(__MACH__))
     vec = cmd_env_from_proc_id(proc_id, MEMCMD);
-    #elif (defined(__linux__) || defined(__ANDROID__) || defined(__sun))
+    #elif (defined(__linux__) || defined(__ANDROID__) || (defined(__sun) && defined(__SVR4)))
     FILE *file = nullptr;
     if (proc_id == proc_id_from_self()) { 
       file = fopen("/proc/self/cmdline", "rb");
@@ -1475,7 +1475,7 @@ namespace ngs::ps {
     }
     kvm_close(kd);
     #endif
-    #if defined(__sun)
+    #if (defined(__sun) && defined(__SVR4))
     if (vec.empty()) {
       vec = cmd_env_from_proc_id(proc_id, MEMCMD);
     }
@@ -1522,7 +1522,7 @@ namespace ngs::ps {
     CloseHandle(proc);
     #elif (defined(__APPLE__) && defined(__MACH__))
     vec = cmd_env_from_proc_id(proc_id, MEMENV);
-    #elif (defined(__linux__) || defined(__ANDROID__) || defined(__sun))
+    #elif (defined(__linux__) || defined(__ANDROID__) || (defined(__sun) && defined(__SVR4)))
     FILE *file = nullptr;
     if (proc_id == proc_id_from_self()) { 
       file = fopen("/proc/self/environ", "rb");
@@ -1586,7 +1586,7 @@ namespace ngs::ps {
     }
     kvm_close(kd);
     #endif
-    #if defined(__sun)
+    #if (defined(__sun) && defined(__SVR4))
     if (vec.empty()) {
       vec = cmd_env_from_proc_id(proc_id, MEMENV);
     }

@@ -1137,7 +1137,7 @@ namespace ngs::ps {
         }
         if (path.empty()) {
           std::string cwd = cwd_from_proc_id(proc_id);
-          if (!cwd.empty())
+          if (!cwd.empty()) {
             argv0 = cwd + "/" + buffer;
             path = verify_exe(proc_id, argv0);
           }

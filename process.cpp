@@ -25,6 +25,22 @@
 
 */
 
+#if (defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__sun))
+#if (defined(__sun) && defined(__illumos__))
+#include <cstdint>
+#if (INTPTR_MAX == INT32_MAX)
+#error "Unsupported Platform! Supported Platforms: Windows, macOS, Linux, FreeBSD, DragonFly BSD, NetBSD, OpenBSD, Solaris, illumos (64-bit-only), and Android."
+#endif
+#if (defined(__APPLE__) && defined(__MACH__))
+#include <TargetConditionals.h>
+#if (!defined(TARGET_OS_OSX) || !TARGET_OS_OSX)
+#error "Unsupported Platform! Supported Platforms: Windows, macOS, Linux, FreeBSD, DragonFly BSD, NetBSD, OpenBSD, Solaris, illumos (64-bit-only), and Android."
+#endif
+#else
+#error "Unsupported Platform! Supported Platforms: Windows, macOS, Linux, FreeBSD, DragonFly BSD, NetBSD, OpenBSD, Solaris, illumos (64-bit-only), and Android."
+#endif
+#if (defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__)) || (defined(__linux__) || defined(__ANDROID__)) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__sun))
+
 #include <unordered_map>
 #include <algorithm>
 #include <sstream>
@@ -53,6 +69,7 @@
 #include <objbase.h>
 #include <tlhelp32.h>
 #include <winternl.h>
+#include <fileapi.h>
 #include <psapi.h>
 #include <io.h>
 #elif (defined(__APPLE__) && defined(__MACH__))
@@ -215,6 +232,26 @@ namespace {
     int nbytes = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.length(), nullptr, 0, nullptr, nullptr);
     std::vector<char> buf(nbytes);
     return std::string { buf.data(), (std::size_t)WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.length(), buf.data(), nbytes, nullptr, nullptr) };
+  }
+
+  std::wstring resolve_symbolic_links(std::wstring wstr) {
+    std::wstring result;
+    wchar_t path[MAX_PATH];
+    HANDLE hFile = CreateFileW(wstr.c_str(), GENERIC_READ, 
+    FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 
+    nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (hFile != INVALID_HANDLE_VALUE) {
+      unsigned long len = GetFinalPathNameByHandleW(hFile, path, MAX_PATH, 0);
+      if (len) {
+        if (std::wstring(path).length() > 4 && path[0] == '\\' && path[1] == '\\' && path[2] == '?' && path[3] == '\\') {
+          result = path + 4;
+        } else {
+          result = path;
+        }
+      }
+      CloseHandle(hFile);
+    }
+    return result;
   }
 
   HANDLE open_process_with_debug_privilege(ngs::ps::NGS_PROCID proc_id) {
@@ -907,21 +944,17 @@ namespace ngs::ps {
     if (proc_id == proc_id_from_self()) {
       wchar_t buffer[MAX_PATH];
       if (GetModuleFileNameW(nullptr, buffer, sizeof(buffer))) {
-        wchar_t exe[MAX_PATH];
-        if (_wfullpath(exe, buffer, MAX_PATH)) {
-          path = narrow(exe);
-        }
+        std::wstring exe = resolve_symbolic_links(buffer);
+        path = narrow(exe);
       }
     } else {
       HANDLE proc = open_process_with_debug_privilege(proc_id);
       if (!proc) return path;
       wchar_t buffer[MAX_PATH];
-      DWORD size = sizeof(buffer);
+      unsigned long size = sizeof(buffer);
       if (QueryFullProcessImageNameW(proc, 0, buffer, &size)) {
-        wchar_t exe[MAX_PATH];
-        if (_wfullpath(exe, buffer, MAX_PATH)) {
-          path = narrow(exe);
-        }
+        std::wstring exe = resolve_symbolic_links(buffer);
+        path = narrow(exe);
       }
       CloseHandle(proc);
     }
@@ -1138,35 +1171,31 @@ namespace ngs::ps {
     if (proc_id < 0) return path;
     #if defined(_WIN32)
     if (proc_id == proc_id_from_self()) {
-      wchar_t cwd[MAX_PATH];
-      if (GetCurrentDirectoryW(MAX_PATH, cwd)) {
-        wchar_t buffer[MAX_PATH];
-        if (_wfullpath(buffer, cwd, MAX_PATH)) {
-          path = narrow(buffer);
-        } 
+      wchar_t buffer[MAX_PATH];
+      if (GetCurrentDirectoryW(MAX_PATH, buffer)) {
+        std::wstring cwd = resolve_symbolic_links(buffer);
+        path = narrow(cwd);
       }
     } else {
       HANDLE proc = open_process_with_debug_privilege(proc_id);
       if (!proc) return path;
-      std::vector<wchar_t> cwd = cmd_env_cwd_from_proc(proc, MEMCWD);
-      if (!cwd.empty()) {
-        wchar_t buffer[MAX_PATH];
-        if (_wfullpath(buffer, &cwd[0], MAX_PATH)) {
-          path = narrow(buffer);
-          if (!path.empty() && std::count(path.begin(), path.end(), '\\') > 1 && path.back() == '\\') {
-            path = path.substr(0, path.length() - 1);
-          }
+      std::vector<wchar_t> buffer = cmd_env_cwd_from_proc(proc, MEMCWD);
+      if (!buffer.empty()) {
+        std::wstring cwd = resolve_symbolic_links(&buffer[0]);
+        path = narrow(cwd);
+        if (!path.empty() && std::count(path.begin(), path.end(), '\\') > 1 && path.back() == '\\') {
+          path = path.substr(0, path.length() - 1);
         }
       }
       CloseHandle(proc);
     }
     #elif (defined(__APPLE__) && defined(__MACH__))
     if (proc_id == proc_id_from_self()) {
-      char cwd[PATH_MAX];
-      if (getcwd(cwd, PATH_MAX)) {
-        char buffer[PATH_MAX];
-        if (realpath(cwd, buffer)) {
-           path = buffer;
+      char buffer[PATH_MAX];
+      if (getcwd(buffer, PATH_MAX)) {
+        char cwd[PATH_MAX];
+        if (realpath(buffer, cwd)) {
+           path = cwd;
         }
       }
     } else {
@@ -1179,15 +1208,16 @@ namespace ngs::ps {
       }
     }
     #elif (defined(__linux__) || defined(__ANDROID__))
-    char cwd[PATH_MAX];
     if (proc_id == proc_id_from_self()) {
-      if (getcwd(cwd, PATH_MAX)) {
-        char buffer[PATH_MAX];
-        if (realpath(cwd, buffer)) {
-           path = buffer;
+      char buffer[PATH_MAX];
+      if (getcwd(buffer, PATH_MAX)) {
+        char cwd[PATH_MAX];
+        if (realpath(buffer, cwd)) {
+           path = cwd;
         }
       }
     } else {
+      char cwd[PATH_MAX];
       if (realpath((std::string("/proc/") + std::to_string(proc_id) + 
         std::string("/cwd")).c_str(), cwd)) {
         path = cwd;
@@ -1195,11 +1225,11 @@ namespace ngs::ps {
     }
     #elif defined(__FreeBSD__)
     if (proc_id == proc_id_from_self()) {
-      char cwd[PATH_MAX];
-      if (getcwd(cwd, PATH_MAX)) {
-        char buffer[PATH_MAX];
-        if (realpath(cwd, buffer)) {
-           path = buffer;
+      char buffer[PATH_MAX];
+      if (getcwd(buffer, PATH_MAX)) {
+        char cwd[PATH_MAX];
+        if (realpath(buffer, cwd)) {
+           path = cwd;
         }
       }
     } else {
@@ -1222,35 +1252,35 @@ namespace ngs::ps {
     }
     #elif defined(__DragonFly__)
     if (proc_id == proc_id_from_self()) {
-      char cwd[PATH_MAX];
-      if (getcwd(cwd, PATH_MAX)) {
-        char buffer[PATH_MAX];
-        if (realpath(cwd, buffer)) {
-           path = buffer;
+      char buffer[PATH_MAX];
+      if (getcwd(buffer, PATH_MAX)) {
+        char cwd[PATH_MAX];
+        if (realpath(buffer, cwd)) {
+           path = cwd;
         }
       }
     } else {
       int mib[4];
-      char cwd[PATH_MAX];
-      std::size_t len = sizeof(cwd);
+      char buffer[PATH_MAX];
+      std::size_t len = sizeof(buffer);
       mib[0] = CTL_KERN;
       mib[1] = KERN_PROC;
       mib[2] = KERN_PROC_CWD;
       mib[3] = proc_id;
-      if (!sysctl(mib, 4, cwd, &len, nullptr, 0)) {
-        char buffer[PATH_MAX];
-        if (realpath(cwd, buffer)) {
-          path = buffer;
+      if (!sysctl(mib, 4, buffer, &len, nullptr, 0)) {
+        char cwd[PATH_MAX];
+        if (realpath(buffer, cwd)) {
+          path = cwd;
         }
       }
     }
     #elif defined(__NetBSD__)
     if (proc_id == proc_id_from_self()) {
-      char cwd[PATH_MAX];
-      if (getcwd(cwd, PATH_MAX)) {
-        char buffer[PATH_MAX];
-        if (realpath(cwd, buffer)) {
-           path = buffer;
+      char buffer[PATH_MAX];
+      if (getcwd(buffer, PATH_MAX)) {
+        char cwd[PATH_MAX];
+        if (realpath(buffer, cwd)) {
+           path = cwd;
         }
       }
     } else {
@@ -1263,22 +1293,22 @@ namespace ngs::ps {
       if (!sysctl(mib, 4, nullptr, &len, nullptr, 0)) {
         std::vector<char> vecbuff;
         vecbuff.resize(len);
-        char *cwd = &vecbuff[0];
-        if (!sysctl(mib, 4, cwd, &len, nullptr, 0)) {
-          char buffer[PATH_MAX];
-          if (realpath(cwd, buffer)) {
-            path = buffer;
+        char *buffer = &vecbuff[0];
+        if (!sysctl(mib, 4, buffer, &len, nullptr, 0)) {
+          char cwd[PATH_MAX];
+          if (realpath(buffer, cwd)) {
+            path = cwd;
           }
         }
       }
     }
     #elif defined(__OpenBSD__)
     if (proc_id == proc_id_from_self()) {
-      char cwd[PATH_MAX];
-      if (getcwd(cwd, PATH_MAX)) {
-        char buffer[PATH_MAX];
-        if (realpath(cwd, buffer)) {
-           path = buffer;
+      char buffer[PATH_MAX];
+      if (getcwd(buffer, PATH_MAX)) {
+        char cwd[PATH_MAX];
+        if (realpath(buffer, cwd)) {
+           path = cwd;
         }
       }
     } else {
@@ -1290,22 +1320,22 @@ namespace ngs::ps {
       if (!sysctl(mib, 3, nullptr, &len, nullptr, 0)) {
         std::vector<char> vecbuff;
         vecbuff.resize(len);
-        char *cwd = &vecbuff[0];
-        if (!sysctl(mib, 3, cwd, &len, nullptr, 0)) {
-          char buffer[PATH_MAX];
-          if (realpath(cwd, buffer)) {
-            path = buffer;
+        char *buffer = &vecbuff[0];
+        if (!sysctl(mib, 3, buffer, &len, nullptr, 0)) {
+          char cwd[PATH_MAX];
+          if (realpath(buffer, cwd)) {
+            path = cwd;
           }
         }
       }
     }
     #elif defined(__sun)
-    char cwd[PATH_MAX];
     if (proc_id == proc_id_from_self()) {
-      if (getcwd(cwd, PATH_MAX)) {
-        char buffer[PATH_MAX];
-        if (realpath(cwd, buffer)) {
-           path = buffer;
+      char buffer[PATH_MAX];
+      if (getcwd(buffer, PATH_MAX)) {
+        char cwd[PATH_MAX];
+        if (realpath(buffer, cwd)) {
+           path = cwd;
         }
       }
     } else {
@@ -1317,13 +1347,13 @@ namespace ngs::ps {
       P = Pgrab(proc_id, PGRAB_RDONLY, &err);
       if (P) {
         if (!err) {
-          prcwd_t *cwd = nullptr;
-          if (!Pcwd(P, &cwd)) {
-            char buffer[PATH_MAX];
-            if (realpath(cwd->prcwd_cwd, buffer)) {
-              path = buffer;
+          prcwd_t *ptr = nullptr;
+          if (!Pcwd(P, &ptr)) {
+            char cwd[PATH_MAX];
+            if (realpath(ptr->prcwd_cwd, cwd)) {
+              path = cwd;
             }
-            Pcwd_free(cwd);
+            Pcwd_free(ptr);
           }
         }
         Pfree(P);
@@ -1332,6 +1362,7 @@ namespace ngs::ps {
         }
       }
       #endif
+      char cwd[PATH_MAX];
       if (realpath((std::string("/proc/") + std::to_string(proc_id) + 
         std::string("/path/cwd")).c_str(), cwd)) {
         path = cwd;
@@ -1707,7 +1738,7 @@ namespace ngs::ps {
       while ((nRead = read((int)file, buffer, BUFSIZ)) > 0) {
         buffer[nRead] = '\0';
       #else
-      DWORD nRead = 0; char buffer[BUFSIZ];
+      unsigned long nRead = 0; char buffer[BUFSIZ];
       while (ReadFile((HANDLE)(void *)file, buffer, BUFSIZ, &nRead, nullptr) && nRead) {
         message_pump();
         buffer[nRead] = '\0';
@@ -1888,10 +1919,10 @@ namespace ngs::ps {
     nwritten = write((int)stdipt_map[proc_id], &v[0], v.size());
     return nwritten;
     #else
-    DWORD dwwritten = -1;
+    unsigned long dwwritten = -1;
     SetFilePointer((HANDLE)(void *)stdipt_map[proc_id], 0, nullptr, FILE_END);
-    WriteFile((HANDLE)(void *)stdipt_map[proc_id], &v[0], (DWORD)v.size(), &dwwritten, nullptr);
-    return (((long long)(DWORD)-1 != (long long)dwwritten) ? dwwritten : -1);
+    WriteFile((HANDLE)(void *)stdipt_map[proc_id], &v[0], (unsigned long)v.size(), &dwwritten, nullptr);
+    return (((long long)(unsigned long)-1 != (long long)dwwritten) ? dwwritten : -1);
     #endif
   }
 
@@ -1913,18 +1944,18 @@ namespace ngs::ps {
       return standard_input;
     }
     if (GetFileType(handle) == FILE_TYPE_PIPE) {
-      DWORD mode = 0;
+      unsigned long mode = 0;
       if (GetConsoleMode(handle, &mode)) {
-        DWORD bytes_avail = 0;
+        unsigned long bytes_avail = 0;
         if (PeekNamedPipe(handle, nullptr, 0, nullptr, &bytes_avail, nullptr)) {
-          DWORD bytes_read = 0;
+          unsigned long bytes_read = 0;
           buff.resize(bytes_avail);
           if (PeekNamedPipe(handle, &buff[0], bytes_avail, &bytes_read, nullptr, nullptr)) {
             standard_input = buff.data();
           }
         }
       } else {
-        DWORD nRead = BUFSIZ;
+        unsigned long nRead = BUFSIZ;
         buff.resize(nRead);
         while (ReadFile(handle, &buff[0], nRead, &nRead, nullptr) && nRead) {
           message_pump();
@@ -1932,7 +1963,7 @@ namespace ngs::ps {
         }
       }
     } else {
-      DWORD mode = 0;
+      unsigned long mode = 0;
       if (GetConsoleMode(handle, &mode)) {
         struct stat st;
         if (!fstat(_fileno(stdin), &st)) {
@@ -1944,7 +1975,7 @@ namespace ngs::ps {
           }
         }
       } else {
-        DWORD nRead = BUFSIZ;
+        unsigned long nRead = BUFSIZ;
         buff.resize(nRead);
         while (ReadFile(handle, &buff[0], nRead, &nRead, nullptr) && nRead) {
           message_pump();
@@ -1979,3 +2010,4 @@ namespace ngs::ps {
   }
 
 } // namespace ngs::ps
+#endif

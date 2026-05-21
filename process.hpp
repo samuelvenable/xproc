@@ -34,6 +34,7 @@
 #if (INTPTR_MAX == INT32_MAX)
 #error "Unsupported Platform! Supported Platforms: Windows, macOS, Linux, FreeBSD, DragonFly BSD, NetBSD, OpenBSD, Solaris, illumos (64-bit-only), and Android."
 #endif
+#endif
 #if (defined(__APPLE__) && defined(__MACH__))
 #include <TargetConditionals.h>
 #if (!defined(TARGET_OS_OSX) || !TARGET_OS_OSX)

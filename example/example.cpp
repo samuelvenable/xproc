@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     printf("%s\n", standard_input.c_str());
     return 0;
   }
-  std::vector<ngs::ps::NGS_PROCID> pid;
+  std::vector<ngs::ps::ngs_proc_id_t> pid;
   if (argc >= 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0)) {
     printf("usage: xproc <options>\n  options:\n    -h or -help\n    -e or -exec <command>\n    -f or -file <filename>\n");
     return 0;
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
       command += std::string(argv[i]) + " ";
     while (!command.empty() && command.back() == ' ')
       command.pop_back();
-    ngs::ps::NGS_PROCID proc_id = ngs::ps::spawn_child_proc_id(command, false);
+    ngs::ps::ngs_proc_id_t proc_id = ngs::ps::spawn_child_proc_id(command, false);
     while (proc_id != 0 && !ngs::ps::child_proc_id_is_complete(proc_id));
     printf("%s", ngs::ps::read_from_stdout_for_child_proc_id(proc_id).c_str());
     ngs::ps::free_stdout_for_child_proc_id(proc_id);
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
     std::string command = ngs::ps::read_from_stdin_for_self();
     while (!command.empty() && (command.back() == '\r' || command.back() == '\n' || command.back() == ' '))
       command.pop_back();
-    ngs::ps::NGS_PROCID proc_id = ngs::ps::spawn_child_proc_id(command, false);
+    ngs::ps::ngs_proc_id_t proc_id = ngs::ps::spawn_child_proc_id(command, false);
     while (proc_id != 0 && !ngs::ps::child_proc_id_is_complete(proc_id));
     printf("%s", ngs::ps::read_from_stdout_for_child_proc_id(proc_id).c_str());
     ngs::ps::free_stdout_for_child_proc_id(proc_id);
@@ -82,8 +82,8 @@ int main(int argc, char **argv) {
       return 0;
   }
   for (int i = 2; i < argc; i++) {
-    std::vector<ngs::ps::NGS_PROCID> exe = ngs::ps::proc_id_from_exe(argv[i]);
-    std::vector<ngs::ps::NGS_PROCID> cwd = ngs::ps::proc_id_from_cwd(argv[i]);
+    std::vector<ngs::ps::ngs_proc_id_t> exe = ngs::ps::proc_id_from_exe(argv[i]);
+    std::vector<ngs::ps::ngs_proc_id_t> cwd = ngs::ps::proc_id_from_cwd(argv[i]);
     pid.insert(pid.end(), exe.begin(), exe.end());
     pid.insert(pid.end(), cwd.begin(), cwd.end());
   }
@@ -94,9 +94,9 @@ int main(int argc, char **argv) {
     if (!cwd.empty()) std::cout << "pid[" << i << "]: " << pid[i] << ", cwd: " << cwd << "\n";
     std::string comm = ngs::ps::comm_from_proc_id(pid[i]);
     if (!comm.empty()) std::cout << "pid[" << i << "]: " << pid[i] << ", comm: " << comm << "\n";
-    std::vector<ngs::ps::NGS_PROCID> ppid = ngs::ps::parent_proc_id_from_proc_id(pid[i]);
+    std::vector<ngs::ps::ngs_proc_id_t> ppid = ngs::ps::parent_proc_id_from_proc_id(pid[i]);
     if (!ppid.empty()) std::cout << "pid[" << i << "]: " << pid[i] << ", ppid: " << ppid[0] << "\n";
-    std::vector<ngs::ps::NGS_PROCID> cpid = ngs::ps::proc_id_from_parent_proc_id(pid[i]);
+    std::vector<ngs::ps::ngs_proc_id_t> cpid = ngs::ps::proc_id_from_parent_proc_id(pid[i]);
     for (std::size_t j = 0; j < cpid.size(); j++)
       std::cout << "pid[" << i << "]: " << pid[i] << ", cpid[" << j << "]: " << cpid[j] << "\n";
     std::vector<std::string> cmd = ngs::ps::cmdline_from_proc_id(pid[i]);

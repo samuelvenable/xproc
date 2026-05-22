@@ -2,7 +2,7 @@
 Cross-Platform, Foreign Process Information Explorer API
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Supported Platforms: Windows, macOS, Linux, FreeBSD, DragonFly BSD, NetBSD, OpenBSD, Solaris, illumos (64-bit-only), and Android.
+Supported Platforms: Windows, macOS, Linux, FreeBSD, DragonFly BSD, NetBSD, OpenBSD, Solaris, illumos, and Android.
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 

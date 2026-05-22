@@ -31,7 +31,7 @@
 #include <cstddef>
 #include <cstring>
 
-#include "../process.hpp"
+#include "../apiprocess/process.hpp"
 
 #if (defined(_WIN32) && defined(_MSC_VER))
 #pragma comment(linker, "/subsystem:console /ENTRY:mainCRTStartup")

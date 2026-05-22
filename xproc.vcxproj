@@ -148,10 +148,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="example\example.cpp" />
-    <ClCompile Include="process.cpp" />
+    <ClCompile Include="apiprocess\process.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="process.hpp" />
+    <ClInclude Include="apiprocess\process.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

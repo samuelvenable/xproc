@@ -18,12 +18,12 @@
     <ClCompile Include="example\example.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="apiprocess\proccess.cpp">
+    <ClCompile Include="apiprocess\process.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="apiprocess\proccess.hpp">
+    <ClInclude Include="apiprocess\process.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

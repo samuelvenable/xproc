@@ -39,13 +39,13 @@
 
 int main(int argc, char **argv) {
   std::string standard_input = ngs::ps::read_from_stdin_for_self();
-  if (standard_input.length() == standard_input.find_last_of("\n") + 1) {
-    standard_input = standard_input.substr(0, standard_input.find_last_of("\n"));
-  }
-  if (standard_input.length() == standard_input.find_last_of("\r") + 1) {
-    standard_input = standard_input.substr(0, standard_input.find_last_of("\r"));
-  }
   if (!standard_input.empty()) {
+    if (standard_input.length() == standard_input.find_last_of("\n") + 1) {
+      standard_input = standard_input.substr(0, standard_input.find_last_of("\n"));
+    }
+    if (standard_input.length() == standard_input.find_last_of("\r") + 1) {
+      standard_input = standard_input.substr(0, standard_input.find_last_of("\r"));
+    }
     printf("%s\n", standard_input.c_str());
     return 0;
   }

@@ -1978,6 +1978,7 @@ namespace ngs::ps {
     std::string output = read_from_stdout_for_child_proc_id(proc_id);
     free_stdout_for_child_proc_id(proc_id);
     free_stdin_for_child_proc_id(proc_id);
+    // This function is not compatible with the Msys or Cygwin Terminal:
     if (output.substr(0, 4).compare("Msys") && output.substr(0, 6).compare("Cygwin")) {
       return standard_input;
     }

@@ -33,21 +33,28 @@
 
 #include "../apiprocess/process.hpp"
 
-#if ((defined(_WIN32) && defined(_WIN64)) && defined(_MSC_VER))
+#if (defined(_WIN32) && defined(_MSC_VER))
 #pragma comment(linker, "/subsystem:console /ENTRY:mainCRTStartup")
 #endif
 
 int main(int argc, char **argv) {
-  std::string standard_input = ngs::ps::read_from_stdin_for_self();
-  if (standard_input.length() == standard_input.find_last_of("\n") + 1) {
-    standard_input = standard_input.substr(0, standard_input.find_last_of("\n"));
-  }
-  if (standard_input.length() == standard_input.find_last_of("\r") + 1) {
-    standard_input = standard_input.substr(0, standard_input.find_last_of("\r"));
-  }
-  if (!standard_input.empty()) {
-    printf("%s\n", standard_input.c_str());
-    return 0;
+  ngs::ps::ngs_proc_id_t proc_id = ngs::ps::spawn_child_proc_id("uname -o", false);
+  while (proc_id != 0 && !ngs::ps::child_proc_id_is_complete(proc_id));
+  std::string output = ngs::ps::read_from_stdout_for_child_proc_id(proc_id);
+  ngs::ps::free_stdout_for_child_proc_id(proc_id);
+  ngs::ps::free_stdin_for_child_proc_id(proc_id);
+  if (output.substr(0, 4).compare("Msys") && output.substr(0, 6).compare("Cygwin")) {
+    std::string standard_input = ngs::ps::read_from_stdin_for_self();
+    if (standard_input.length() == standard_input.find_last_of("\n") + 1) {
+      standard_input = standard_input.substr(0, standard_input.find_last_of("\n"));
+    }
+    if (standard_input.length() == standard_input.find_last_of("\r") + 1) {
+      standard_input = standard_input.substr(0, standard_input.find_last_of("\r"));
+    }
+    if (!standard_input.empty()) {
+      printf("%s\n", standard_input.c_str());
+      return 0;
+    }
   }
   std::vector<ngs::ps::ngs_proc_id_t> pid;
   if (argc >= 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0)) {

@@ -25,6 +25,7 @@
 
 */
 
+#include "process.hpp"
 #if defined(__apiprocess_supported__)
 #include <unordered_map>
 #include <algorithm>
@@ -37,8 +38,6 @@
 #include <cstring>
 #include <climits>
 #include <cstdio>
-
-#include "process.hpp"
 
 #if (!defined(_WIN32) && !defined(_WIN64))
 #include <signal.h>

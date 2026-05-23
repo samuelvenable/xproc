@@ -24,6 +24,8 @@
 
 */
 
+#include <apiprocess/process.hpp>
+#if defined(__apiprocess_supported__)
 #include <iostream>
 
 #include <cctype>
@@ -31,13 +33,13 @@
 #include <cstddef>
 #include <cstring>
 
-#include "../apiprocess/process.hpp"
-
 #if (defined(_WIN32) && defined(_MSC_VER))
 #pragma comment(linker, "/subsystem:console /ENTRY:mainCRTStartup")
 #endif
+#endif
 
 int main(int argc, char **argv) {
+  #if defined(__apiprocess_supported__)
   std::string standard_input = ngs::ps::read_from_stdin_for_self();
   if (!standard_input.empty()) {
     if (standard_input.length() == standard_input.find_last_of("\n") + 1) {
@@ -106,5 +108,6 @@ int main(int argc, char **argv) {
     for (std::size_t j = 0; j < env.size(); j++)
       std::cout << "pid[" << i << "]: " << pid[i] << ", env[" << j << "]: " << env[j] << "\n";
   }
+  #endif
   return 0;
 }

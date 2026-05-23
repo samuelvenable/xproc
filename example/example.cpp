@@ -33,7 +33,7 @@
 
 #include "../apiprocess/process.hpp"
 
-#if (defined(_WIN32) && defined(_MSC_VER))
+#if ((defined(_WIN32) && defined(_WIN64)) && defined(_MSC_VER))
 #pragma comment(linker, "/subsystem:console /ENTRY:mainCRTStartup")
 #endif
 

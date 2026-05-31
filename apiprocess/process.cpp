@@ -1224,12 +1224,13 @@ namespace ngs::ps {
     } else {
       HANDLE proc = open_process_with_debug_privilege(proc_id);
       if (!proc) return path;
-      std::vector<wchar_t> buffer = cmd_env_cwd_from_proc(proc, MEMCWD);
-      if (!buffer.empty()) {
-        std::wstring cwd = &buffer[0];
-        if (!cwd.empty() && std::count(cwd.begin(), cwd.end(), '\\') > 1 && cwd.back() == '\\') {
-          cwd = cwd.substr(0, cwd.length() - 1);
-          if (_wrealpath(buffer, &cwd[0])) {
+      std::vector<wchar_t> buffer1 = cmd_env_cwd_from_proc(proc, MEMCWD);
+      if (!buffer1.empty()) {
+        std::wstring buffer2 = &buffer1[0];
+        if (!buffer2.empty() && std::count(buffer2.begin(), buffer2.end(), '\\') > 1 && buffer2.back() == '\\') {
+          buffer2 = buffer2.substr(0, buffer2.length() - 1);
+          wchar_t cwd[MAX_PATH];
+          if (_wrealpath(&buffer2[0], cwd)) {
             path = narrow(cwd);
           }
         }

@@ -223,12 +223,13 @@ namespace {
   }
 
   wchar_t *_wrealpath(const wchar_t *path, wchar_t *resolved_path) {
+    DWORD len = 0;
     std::wstring result;
-    wchar_t buffer[MAX_PATH];
-    wchar_t *ptr = (((wchar_t *)resolved_path) ? ((wchar_t *)resolved_path) : ((wchar_t *)buffer));
+    wchar_t buf[MAX_PATH];
+    wchar_t *ptr = (((wchar_t *)resolved_path) ? ((wchar_t *)resolved_path) : ((wchar_t *)buf));
     HANDLE hFile = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
     if (hFile != INVALID_HANDLE_VALUE) {
-      DWORD len = GetFinalPathNameByHandleW(hFile, ptr, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+      len = GetFinalPathNameByHandleW(hFile, ptr, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
       if (len) {
         result = ptr;
         if (!result.substr(0, 8).compare(L"\\\\?\\UNC\\")) {
@@ -239,11 +240,11 @@ namespace {
       }
       CloseHandle(hFile);
     }
-    if (wcslen(buffer)) {
+    if (!resolved_path && wcslen(buf)) {
       return _wcsdup(result.c_str());
-    } else if (wcslen(resolved_path)) {
-      wcsncpy_s(resolved_path, sizeof(resolved_path) / sizeof(*resolved_path), result.c_str(), wcslen(result.c_str()));
-      return (wchar_t *)resolved_path;
+    } else if (resolved_path && wcslen(result.c_str())) {
+      wcsncpy_s(ptr, MAX_PATH, result.c_str(), _TRUNCATE);
+      return (wchar_t *)ptr;
     }
     return nullptr;
   }

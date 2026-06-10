@@ -1,5 +1,6 @@
 #!/bin/sh
 cd "${0%/*}/../"
+# Some platforms do not accept the -o flag for uname; any warnings printed to the terminal concerning this can be safely ignored...
 if [ `uname -o` = "Msys" ]; then
   g++ example/example.cpp apiprocess/process.cpp -o xproc.exe -I. -std=c++17 -DNULLIFY_STDERR -Wall -static-libgcc -static-libstdc++ -static -lntdll -Wl,--subsystem,console; ./xproc.exe;
 elif [ `uname` = "Darwin" ]; then

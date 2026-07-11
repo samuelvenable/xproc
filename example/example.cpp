@@ -27,6 +27,7 @@
 #include <apiprocess/process.hpp>
 #if defined(__apiprocess_supported__)
 #include <iostream>
+#include <algorithm>
 
 #include <cctype>
 #include <cstdio>
@@ -56,6 +57,9 @@ int main(int argc, char **argv) {
     printf("usage: xproc <options>\n  options:\n    -h or -help\n    -e or -exec <command>\n    -f or -file <filename>\n");
     return 0;
   } else if (argc >= 3 && (strcmp(argv[1], "-e") == 0 || strcmp(argv[1], "-exec") == 0)) {
+    auto contains_whitespace = [](std::string str) {
+      return std::any_of(str.begin(), str.end(), [](unsigned char ch) { return std::isspace(ch); });
+    };
     auto string_replace_all = [](std::string str, std::string substr, std::string nstr) {
       std::size_t pos = 0;
       while ((pos = str.find(substr, pos)) != std::string::npos) {
@@ -65,8 +69,13 @@ int main(int argc, char **argv) {
       return str;
     };
     std::string command;
-    for (int i = 2; i < argc; i++)
-      command += std::string("\"") + string_replace_all(argv[i], "\"", "\\\"") + "\" ";
+    for (int i = 2; i < argc; i++) {
+      if (contains_whitespace(argv[i])) {
+        command += std::string("\"") + string_replace_all(argv[i], "\"", "\\\"") + "\" ";
+      } else {
+        command += std::string(argv[i]) + "\" ";
+      }
+    }
     while (!command.empty() && command.back() == ' ')
       command.pop_back();
     ngs::ps::ngs_proc_id_t proc_id = ngs::ps::spawn_child_proc_id(command, false);

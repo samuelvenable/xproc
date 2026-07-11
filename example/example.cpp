@@ -56,9 +56,17 @@ int main(int argc, char **argv) {
     printf("usage: xproc <options>\n  options:\n    -h or -help\n    -e or -exec <command>\n    -f or -file <filename>\n");
     return 0;
   } else if (argc >= 3 && (strcmp(argv[1], "-e") == 0 || strcmp(argv[1], "-exec") == 0)) {
+    auto string_replace_all = [](std::string str, std::string substr, std::string nstr) {
+      std::size_t pos = 0;
+      while ((pos = str.find(substr, pos)) != std::string::npos) {
+        str.replace(pos, substr.length(), nstr);
+        pos += nstr.length();
+      }
+      return str;
+    };
     std::string command;
     for (int i = 2; i < argc; i++)
-      command += std::string(argv[i]) + " ";
+      command += "\"" + string_replace_all(argv[i], "\", "\\\""") + "\" ";
     while (!command.empty() && command.back() == ' ')
       command.pop_back();
     ngs::ps::ngs_proc_id_t proc_id = ngs::ps::spawn_child_proc_id(command, false);

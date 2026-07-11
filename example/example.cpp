@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
       if (contains_whitespace(argv[i])) {
         command += std::string("\"") + string_replace_all(argv[i], "\"", "\\\"") + "\" ";
       } else {
-        command += std::string(argv[i]) + "\" ";
+        command += std::string(argv[i]) + " ";
       }
     }
     while (!command.empty() && command.back() == ' ')

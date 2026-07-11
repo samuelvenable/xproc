@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     };
     std::string command;
     for (int i = 2; i < argc; i++)
-      command += "\"" + string_replace_all(argv[i], "\", "\\\"") + "\" ";
+      command += std::string("\"") + string_replace_all(argv[i], "\"", "\\\"") + "\" ";
     while (!command.empty() && command.back() == ' ')
       command.pop_back();
     ngs::ps::ngs_proc_id_t proc_id = ngs::ps::spawn_child_proc_id(command, false);

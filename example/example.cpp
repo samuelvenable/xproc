@@ -35,7 +35,7 @@
 #include <cstring>
 
 #if ((defined(_WIN32) || defined(_WIN64)) && defined(_MSC_VER))
-#pragma comment(linker, "/subsystem:console /entry:maincrtstartup")
+#pragma comment(linker, "/subsystem:console /entry:mainCRTStartup")
 #endif
 #endif
 

@@ -25,11 +25,11 @@ Supports Windows, macOS, GNU/Linux, FreeBSD, DragonFly BSD, NetBSD, OpenBSD, Sol
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-`bool proc_id_kill(ngs_proc_id_t proc_id);` kills the process represented by the process identifier in the proc_id argument. When a process is killed, it is forced to be closed by the calling process. It can be dangerous to accidentally kill the wrong process. Returns true on success; returns false on failure.
+`bool proc_id_kill(ngs_proc_id_t proc_id);` kills the process represented by the process identifier in the proc_id argument. When a process is killed, it is forced to be closed by the calling process. It can be dangerous to accidentally kill the wrong process, and it is easy to do so, especially in the case of a race condition. Returns true on success; returns false on failure.
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-`std::vector<ngs_proc_id_t> parent_proc_id_from_proc_id(ngs_proc_id_t proc_id);` on success, the function returns a C++ std::vector holding a single process identifier which represents the parent process of the process identifier provided in the proc_id argument. std::vector::empty() returns true if the function fails, and errno will be set to a non-zero value. Every process is guaranteed to have a parent, even if the function fails to find one. A process identifier of zero has a parent; its parent is itself.
+`std::vector<ngs_proc_id_t> parent_proc_id_from_proc_id(ngs_proc_id_t proc_id);` on success, the function returns a C++ std::vector holding a single process identifier which represents the parent process of the process identifier provided in the proc_id argument. std::vector::empty() returns true if the function fails, and errno will be set to a non-zero value.
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -2,7 +2,7 @@
 
 build:
 	chmod u+x ./example/example.sh
-	./example/example.sh 2> /dev/null
+	./example/example.sh
 
 prerequisites: build
 

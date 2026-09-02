@@ -64,6 +64,7 @@ SOFTWARE.
 #elif ((defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) || defined(__DragonFly__) || defined(__OpenBSD__))
 #include <sys/param.h>
 #include <sys/sysctl.h>
+#include <sys/proc.h>
 #include <sys/user.h>
 #include <kvm.h>
 #elif defined(__NetBSD__)
@@ -567,7 +568,7 @@ namespace ngs::ps {
     if (!kd) return vec;
     if ((proc_info = kvm_getprocs(kd, KERN_PROC_PROC, 0, &cntp))) {
       for (int i = 0; i < cntp; i++) {
-        if (proc_info[i].p_flag & P_SYSTEM) {
+        if (proc_info[i].ki_flag & P_SYSTEM) {
           continue;
         }
         vec.push_back(proc_info[i].ki_pid);
@@ -775,7 +776,7 @@ namespace ngs::ps {
     kd = kvm_openfiles(nlistf, memf, nullptr, O_RDONLY, nullptr);
     if (!kd) return vec;
     if ((proc_info = kvm_getprocs(kd, KERN_PROC_PID, proc_id, &cntp))) {
-      if (!(proc_info->p_flag & P_SYSTEM)) {
+      if (!(proc_info->ki_flag & P_SYSTEM)) {
         vec.push_back(proc_info->ki_ppid);
       }
     }
@@ -909,7 +910,7 @@ namespace ngs::ps {
     if (!kd) return vec;
     if ((proc_info = kvm_getprocs(kd, KERN_PROC_PROC, 0, &cntp))) {
       for (int i = 0; i < cntp; i++) {
-        if (proc_info[i].p_flag & P_SYSTEM) {
+        if (proc_info[i].ki_flag & P_SYSTEM) {
           continue;
         }
         if (proc_info[i].ki_ppid == parent_proc_id) {

@@ -885,6 +885,9 @@ namespace ngs::ps {
     kvm_close(kd);
     finish:
     #endif
+	if (!vec.empty() && vec[0] == 0) {
+	  vec.clear();
+	}
     return vec;
   }
 

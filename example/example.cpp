@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
     pid.insert(pid.end(), cwd.begin(), cwd.end());
   }
   for (std::size_t i = 0; i < pid.size(); i++) {
-    std::cout << "pid[" << i << "]: " << pid[i] << "\n";
+    std::cout << "pid[" << i << "]: " << pid[i] << ", pid: " << pid[i] << "\n";
     std::string exe = ngs::ps::exe_from_proc_id(pid[i]);
     if (!exe.empty()) std::cout << "pid[" << i << "]: " << pid[i] << ", exe: " << exe << "\n";
     std::string cwd = ngs::ps::cwd_from_proc_id(pid[i]);

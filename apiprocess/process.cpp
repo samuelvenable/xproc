@@ -854,6 +854,9 @@ namespace ngs::ps {
 
   std::vector<ngs_proc_id_t> proc_id_from_parent_proc_id(ngs_proc_id_t parent_proc_id) {
     std::vector<ngs_proc_id_t> vec;
+    #if (!defined(_WIN32) && !defined(_WIN64))
+    if (parent_proc_id < 0) return vec;
+    #endif
     std::vector<ngs_proc_id_t> proc_id = proc_id_enum();
     for (std::size_t i = 0; i < proc_id.size(); i++) {
       std::vector<ngs_proc_id_t> ppid = parent_proc_id_from_proc_id(proc_id[i]);

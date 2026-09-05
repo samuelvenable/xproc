@@ -1,8 +1,7 @@
 .PHONY: build
 
 build:
-	chmod u+x ./example/example.sh
-	./example/example.sh
+	cd example && chmod u+x example.sh && ./example.sh
 
 prerequisites: build
 

@@ -41,7 +41,7 @@ SOFTWARE.
 
 int main(int argc, char **argv) {
   #if defined(__apiprocess_supported__)
-  std::string standard_input = ngs::ps::read_from_stdin_for_self();
+  std::string standard_input = apiprocess::read_from_stdin_for_self();
   if (!standard_input.empty()) {
     if (standard_input.length() == standard_input.find_last_of("\n") + 1) {
       standard_input = standard_input.substr(0, standard_input.find_last_of("\n"));
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     printf("%s\n", standard_input.c_str());
     return 0;
   }
-  std::vector<ngs::ps::ngs_proc_id_t> pid;
+  std::vector<apiprocess::proc_id_t> pid;
   if (argc >= 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0)) {
     printf("usage: xproc <options>\n  options:\n    -h or -help\n    -e or -exec <command>\n    -f or -file <filename>\n");
     return 0;
@@ -78,41 +78,41 @@ int main(int argc, char **argv) {
     }
     while (!command.empty() && command.back() == ' ')
       command.pop_back();
-    ngs::ps::ngs_proc_id_t proc_id = ngs::ps::spawn_child_proc_id(command, false);
-    while (proc_id != 0 && !ngs::ps::child_proc_id_is_complete(proc_id));
-    printf("%s", ngs::ps::read_from_stdout_for_child_proc_id(proc_id).c_str());
-    ngs::ps::free_stdout_for_child_proc_id(proc_id);
-    ngs::ps::free_stdin_for_child_proc_id(proc_id);
+    apiprocess::proc_id_t proc_id = apiprocess::spawn_child_proc_id(command, false);
+    while (proc_id != 0 && !apiprocess::child_proc_id_is_complete(proc_id));
+    printf("%s", apiprocess::read_from_stdout_for_child_proc_id(proc_id).c_str());
+    apiprocess::free_stdout_for_child_proc_id(proc_id);
+    apiprocess::free_stdin_for_child_proc_id(proc_id);
     return 0;
   } else if (argc == 1) {
-    pid = ngs::ps::proc_id_enum();
+    pid = apiprocess::proc_id_enum();
   } else if (argc >= 3) {
     if (!(strcmp(argv[1], "-f") == 0 || strcmp(argv[1], "-file") == 0))
       return 0;
   }
   for (int i = 2; i < argc; i++) {
-    std::vector<ngs::ps::ngs_proc_id_t> exe = ngs::ps::proc_id_from_exe(argv[i]);
-    std::vector<ngs::ps::ngs_proc_id_t> cwd = ngs::ps::proc_id_from_cwd(argv[i]);
+    std::vector<apiprocess::proc_id_t> exe = apiprocess::proc_id_from_exe(argv[i]);
+    std::vector<apiprocess::proc_id_t> cwd = apiprocess::proc_id_from_cwd(argv[i]);
     pid.insert(pid.end(), exe.begin(), exe.end());
     pid.insert(pid.end(), cwd.begin(), cwd.end());
   }
   for (std::size_t i = 0; i < pid.size(); i++) {
     std::cout << "pid[" << i << "]: " << pid[i] << ", pid: " << pid[i] << "\n";
-    std::string exe = ngs::ps::exe_from_proc_id(pid[i]);
+    std::string exe = apiprocess::exe_from_proc_id(pid[i]);
     if (!exe.empty()) std::cout << "pid[" << i << "]: " << pid[i] << ", exe: " << exe << "\n";
-    std::string cwd = ngs::ps::cwd_from_proc_id(pid[i]);
+    std::string cwd = apiprocess::cwd_from_proc_id(pid[i]);
     if (!cwd.empty()) std::cout << "pid[" << i << "]: " << pid[i] << ", cwd: " << cwd << "\n";
-    std::string comm = ngs::ps::comm_from_proc_id(pid[i]);
+    std::string comm = apiprocess::comm_from_proc_id(pid[i]);
     if (!comm.empty()) std::cout << "pid[" << i << "]: " << pid[i] << ", comm: " << comm << "\n";
-    std::vector<ngs::ps::ngs_proc_id_t> ppid = ngs::ps::parent_proc_id_from_proc_id(pid[i]);
+    std::vector<apiprocess::proc_id_t> ppid = apiprocess::parent_proc_id_from_proc_id(pid[i]);
     if (!ppid.empty()) std::cout << "pid[" << i << "]: " << pid[i] << ", ppid: " << ppid[0] << "\n";
-    std::vector<ngs::ps::ngs_proc_id_t> cpid = ngs::ps::proc_id_from_parent_proc_id(pid[i]);
+    std::vector<apiprocess::proc_id_t> cpid = apiprocess::proc_id_from_parent_proc_id(pid[i]);
     for (std::size_t j = 0; j < cpid.size(); j++)
       std::cout << "pid[" << i << "]: " << pid[i] << ", cpid[" << j << "]: " << cpid[j] << "\n";
-    std::vector<std::string> cmd = ngs::ps::cmdline_from_proc_id(pid[i]);
+    std::vector<std::string> cmd = apiprocess::cmdline_from_proc_id(pid[i]);
     for (std::size_t j = 0; j < cmd.size(); j++)
       std::cout << "pid[" << i << "]: " << pid[i] << ", cmd[" << j << "]: " << cmd[j] << "\n";
-    std::vector<std::string> env = ngs::ps::environ_from_proc_id(pid[i]);
+    std::vector<std::string> env = apiprocess::environ_from_proc_id(pid[i]);
     for (std::size_t j = 0; j < env.size(); j++)
       std::cout << "pid[" << i << "]: " << pid[i] << ", env[" << j << "]: " << env[j] << "\n";
   }

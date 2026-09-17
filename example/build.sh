@@ -3,7 +3,7 @@ cd "${0%/*}";
 if [ "$OS" = "Windows_NT" ]; then
   g++ main.cpp ../apiprocess/process.cpp -o xproc.exe -I.. -std=c++17 -DNULLIFY_STDERR -static-libgcc -static-libstdc++ -static -lntdll -Wl,--subsystem,console; ./xproc.exe;
 elif [ `uname -s` = "Darwin" ]; then
-  clang++ main.cpp ../apiprocess/process.cpp -o xproc -I.. -std=c++17 -DNULLIFY_STDERR -mmacos-version-min=10.13 -arch arm64 -arch x86_64; ./xproc;
+  clang++ main.cpp ../apiprocess/process.cpp -o xproc -I.. -std=c++17 -DNULLIFY_STDERR -mmacos-version-min=14.0 -arch arm64 -arch x86_64; ./xproc;
 elif [ `uname -s` = "Linux" ]; then
   if [ -f "/bin/g++" ]; then
     g++ main.cpp ../apiprocess/process.cpp -o xproc -I.. -std=c++17 -DNULLIFY_STDERR -static-libgcc -static-libstdc++ -static; ./xproc;
